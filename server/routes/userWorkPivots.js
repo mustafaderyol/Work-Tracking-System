@@ -47,6 +47,29 @@ router.get('/:userId/:limit/:skip', (req, res) => {
     });
 });
 
+router.get('/:workId/:limit/:skip', (req, res) => {
+    const promise = UserWorkPivot.find(
+        {
+            workId: req.params.workId
+        },
+        {},
+        {
+            limit: parseInt(req.params.limit),
+            skip: parseInt(req.params.skip)
+        });
+    promise.then((data) => {
+        res.json({
+            data: data,
+            status: 1
+        });
+    }).catch((err) => {
+        res.json({
+            data: err,
+            status: 0
+        });
+    });
+});
+
 router.get('/:id', (req, res) => {
     const promise = UserWorkPivot.findById(req.params.id);
     promise.then((data) => {

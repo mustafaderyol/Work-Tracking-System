@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-
+const bcrypt = require('bcrypt');
 const User = require('../models/User');
 
 router.get('/:limit/:skip', (req, res) => {
@@ -40,22 +40,25 @@ router.get('/:id', (req, res) => {
 });
 
 router.put('/:id', (req, res, next) => {
-    const promise = User.findByIdAndUpdate(req.params.id, req.body, {new: true});
-    promise.then((data) => {
-        if (!data) {
-            next({
-                data: "Data not found",
+    bcrypt.hash(req.body.password, 10).then((hash) => {
+        req.body.password = hash;
+        const promise = User.findByIdAndUpdate(req.params.id, req.body, {new: true});
+        promise.then((data) => {
+            if (!data) {
+                next({
+                    data: "Data not found",
+                    status: 0
+                });
+            }
+            res.json({
+                data: Array(data),
+                status: 1
+            });
+        }).catch((err) => {
+            res.json({
+                data: err,
                 status: 0
             });
-        }
-        res.json({
-            data: Array(data),
-            status: 1
-        });
-    }).catch((err) => {
-        res.json({
-            data: err,
-            status: 0
         });
     });
 });
@@ -83,16 +86,19 @@ router.delete('/:id', (req, res, next) => {
 
 router.post('/', (req, res, next) => {
     const user = new User(req.body);
-    const promise = user.save();
-    promise.then((data) => {
-        res.json({
-            data: data,
-            status: 1
-        });
-    }).catch((err) => {
-        res.json({
-            data: err,
-            status: 0
+    bcrypt.hash(user.password, 10).then((hash) => {
+        user.password = hash;
+        const promise = user.save();
+        promise.then((data) => {
+            res.json({
+                data: data,
+                status: 1
+            });
+        }).catch((err) => {
+            res.json({
+                data: err,
+                status: 0
+            });
         });
     });
 });
